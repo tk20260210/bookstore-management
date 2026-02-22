@@ -17,18 +17,23 @@ public class BookController {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private SalesRepository salesRepository;
+
     //Search and Show List
     @GetMapping
     public String list(@RequestParam(required = false) String title,
                        @RequestParam(required = false) String author,
+                       @RequestParam(required = false) String category,
                        Model model) {
         List<Book> books;
 
         //if there is search conditions, execute search or else execute find by all.
-        if ((title != null && !title.isEmpty()) || (author != null && !author.isEmpty())) {
+        if ((title != null && !title.isEmpty()) || (author != null && !author.isEmpty()) || (category != null && !category.isEmpty())) {
             String searchTitle = (title != null && !title.isEmpty()) ? title : null;
             String searchAuthor = (author != null && !author.isEmpty()) ? author : null;
-            books = bookRepository.searchBooks(searchTitle, searchAuthor);
+            String searchCategory = (category != null && !category.isEmpty()) ? category : null;
+            books = bookRepository.searchBooks(searchTitle, searchAuthor,searchCategory);
         } else {
             books = bookRepository.findByDeleted(0);
         }
@@ -36,6 +41,7 @@ public class BookController {
         model.addAttribute("books", books);
         model.addAttribute("searchTitle", title);
         model.addAttribute("searchAuthor", author);
+        model.addAttribute("searchCategory", category);
         return "list";
     }
 
@@ -108,4 +114,42 @@ public class BookController {
         }
         return "redirect:/";
     }
+
+    //Sales process
+    @PostMapping("/sell")
+    public String sell(@RequestParam Integer id, @RequestParam Integer quantity) {
+        Optional<Book> bookOpt = bookRepository.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+
+            //Confirm stock
+            if (book.getStock() >= quantity) {
+                //decrease stock
+                book.setStock(book.getStock() - quantity);
+                bookRepository.save(book);
+
+                //Record to sales
+                Sales sales = new Sales(
+                        book.getId(),
+                        book.getTitle(),
+                        quantity,
+                        book.getPrice()
+                );
+                salesRepository.save(sales);
+            }
+        }
+        return "redirect:/";
+    }
+
+    //Show Sales record
+    @GetMapping("/sales")
+    public String salesHistory(Model model) {
+        List<Sales> salesList = salesRepository.findAllByOrderBySaleDateDesc();
+        Integer todayTotal = salesRepository.getTodayTotalSales();
+
+        model.addAttribute("salesList", salesList);
+        model.addAttribute("todayTotal", todayTotal);
+        return "sales";
+    }
+
 }

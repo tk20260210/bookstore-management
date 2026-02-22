@@ -11,7 +11,9 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
 
     @Query("SELECT b FROM Book b WHERE b.deleted = 0" +
             "AND (:title IS NULL OR b.title LIKE %:title%) " +
-            "AND (:author IS NULL OR b.author LIKE %:author%)")
+            "AND (:author IS NULL OR b.author LIKE %:author%) " +
+            "AND (:category IS NULL OR b.category LIKE %:category%)")
     List<Book> searchBooks(@Param("title") String title,
-                           @Param("author") String author);
+                           @Param("author") String author,
+                           @Param("category") String category);
 }

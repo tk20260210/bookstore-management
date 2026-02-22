@@ -15,17 +15,20 @@ public class Book {
     private String publisher;
     private Integer price;
     private Integer stock;
+    private String category;
     private Integer deleted;
+
 
     public Book(){
     }
 
-    public Book(String title, String author, String publisher, Integer price, Integer stock) {
+    public Book(String title, String author, String publisher, Integer price, Integer stock, String category) {
         this.title = title;
         this.author = author;
         this.publisher = publisher;
         this.price = price;
         this.stock = stock;
+        this.category = category;
         this.deleted = 0;
     }
 
@@ -82,5 +85,13 @@ public class Book {
 
     public void setDeleted(Integer deleted) {
         this.deleted = deleted;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

@@ -36,6 +36,18 @@
                             <input type="text" name="publisher" class="form-control" th:value="${book.publisher}">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="">please select</option>
+                                <option value="novel" th:selected="${book.category == 'novel'}">novel</option>
+                                <option value="business" th:selected="${book.category == 'business'}">business</option>
+                                <option value="technical" th:selected="${book.category == 'technical'}">technical</option>
+                                <option value="practical" th:selected="${book.category == 'practical'}">practical</option>
+                                <option value="essay" th:selected="${book.category == 'essay'}">essay</option>
+                                <option value="others" th:selected="${book.category == 'others'}">others</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Price（¥）</label>
                             <input type="number" name="price" class="form-control" th:value="${book.price}" required min="0">
                         </div>

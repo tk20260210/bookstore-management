@@ -30,6 +30,18 @@
                             <input type="text" name="publisher" class="form-control">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="">please select</option>
+                                <option value="novel">novel</option>
+                                <option value="business">business</option>
+                                <option value="technical">technical</option>
+                                <option value="practical">practical</option>
+                                <option value="essay">essay</option>
+                                <option value="others">others</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Price(¥)</label>
                             <input type="number" name="price" class="form-control" required min="0">
                         </div>
