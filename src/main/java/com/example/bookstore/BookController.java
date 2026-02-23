@@ -20,6 +20,9 @@ public class BookController {
     @Autowired
     private SalesRepository salesRepository;
 
+    @Autowired
+    private PurchaseRepository purchaseRepository;
+
     //Search and Show List
     @GetMapping
     public String list(@RequestParam(required = false) String title,
@@ -152,4 +155,39 @@ public class BookController {
         return "sales";
     }
 
+    //Purchase process
+    @PostMapping("/purchase")
+    public String purchase(@RequestParam Integer id,
+                           @RequestParam Integer quantity,
+                           @RequestParam Integer unitPrice) {
+        Optional<Book> bookOpt = bookRepository.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+
+            //Increase stock
+            book.setStock(book.getStock() + quantity);
+            bookRepository.save(book);
+
+            //Record purchases
+            Purchase purchase = new Purchase(
+                book.getId(),
+                book.getTitle(),
+                quantity,
+                unitPrice
+            );
+            purchaseRepository.save(purchase);
+        }
+        return "redirect:/";
+    }
+
+    //Show Purchase history
+    @GetMapping("/purchases")
+    public String purchaseHistory(Model model) {
+        List<Purchase> purchaseList = purchaseRepository.findAllByOrderByPurchaseDateDesc();
+        Integer todayTotal = purchaseRepository.getTodayTotalPurchases();
+
+        model.addAttribute("purchaseList", purchaseList);
+        model.addAttribute("todayTotal", todayTotal);
+        return "purchases";
+    }
 }
