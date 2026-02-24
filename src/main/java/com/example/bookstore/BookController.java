@@ -190,4 +190,29 @@ public class BookController {
         model.addAttribute("todayTotal", todayTotal);
         return "purchases";
     }
+
+    // ========== Function: Statistics and report ==========
+
+    //Show report
+    @GetMapping("/report")
+    public String report(Model model) {
+        //Sales by category
+        List<Object[]> categorySales = salesRepository.getCategorySales();
+
+        //Sales by monthly performance(back in 6 months)
+        List<Object[]> montlySales =  salesRepository.getMonthlySales();
+
+        //Calc profit
+        Integer totalSales = salesRepository.getTotalSales();
+        Integer totalPurchases = purchaseRepository.getTotalPurchases();
+        Integer profit = (totalSales != null ? totalSales : 0) - (totalPurchases != null ? totalPurchases : 0);
+
+        model.addAttribute("categorySales", categorySales);
+        model.addAttribute("monthlySales", montlySales);
+        model.addAttribute("totalSales", totalSales != null ? totalSales: 0);
+        model.addAttribute("totalSales", totalPurchases != null ? totalPurchases: 0);
+        model.addAttribute("profit", profit);
+
+        return "report";
+    }
 }
