@@ -210,7 +210,7 @@ public class BookController {
         model.addAttribute("categorySales", categorySales);
         model.addAttribute("monthlySales", montlySales);
         model.addAttribute("totalSales", totalSales != null ? totalSales: 0);
-        model.addAttribute("totalSales", totalPurchases != null ? totalPurchases: 0);
+        model.addAttribute("totalPurchases", totalPurchases != null ? totalPurchases: 0);
         model.addAttribute("profit", profit);
 
         return "report";
