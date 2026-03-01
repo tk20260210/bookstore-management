@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -120,26 +121,24 @@ public class BookController {
 
     //Sales process
     @PostMapping("/sell")
-    public String sell(@RequestParam Integer id, @RequestParam Integer quantity) {
+    public String sell(@RequestParam Integer id, @RequestParam Integer quantity,
+                       RedirectAttributes redirectAttributes) {
         Optional<Book> bookOpt = bookRepository.findById(id);
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
 
             //Confirm stock
-            if (book.getStock() >= quantity) {
-                //decrease stock
-                book.setStock(book.getStock() - quantity);
-                bookRepository.save(book);
-
-                //Record to sales
-                Sales sales = new Sales(
-                        book.getId(),
-                        book.getTitle(),
-                        quantity,
-                        book.getPrice()
-                );
-                salesRepository.save(sales);
+            if (book.getStock() < quantity) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Out of stock. current stock: " + book.getStock());
+                return "redirect:/";
             }
+
+            book.setStock(book.getStock() - quantity);
+            bookRepository.save(book);
+
+            Sales sales = new Sales(book.getId(), book.getTitle(), quantity, book.getPrice());
+            salesRepository.save(sales);
         }
         return "redirect:/";
     }
