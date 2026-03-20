@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5 text-center" style="max-width: 400px">
+    <div class="mb-4">
+        <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+    </div>
+    <h2>Complete sign up</h2>
+    <p class="text-muted">User name：<strong th:text="${username}"></strong></p>
+    <a th:href="@{/login}" class="btn btn-primary mt-3">Back</a>
+</div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</body>
+</html>

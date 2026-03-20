@@ -36,10 +36,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error", "/error/**").permitAll()
-                        .requestMatchers("/register").permitAll()
+                        .requestMatchers("/register", "/register/confirm", "/register/complete").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
+                        .loginPage("/login")
                         .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
