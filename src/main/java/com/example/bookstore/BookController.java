@@ -16,13 +16,7 @@ import java.util.Optional;
 public class BookController {
 
     @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private SalesRepository salesRepository;
-
-    @Autowired
-    private PurchaseRepository purchaseRepository;
+    private BookService bookService;
 
     //Search and Show List
     @GetMapping
@@ -32,15 +26,7 @@ public class BookController {
                        Model model) {
         List<Book> books;
 
-        //if there is search conditions, execute search or else execute find by all.
-        if ((title != null && !title.isEmpty()) || (author != null && !author.isEmpty()) || (category != null && !category.isEmpty())) {
-            String searchTitle = (title != null && !title.isEmpty()) ? title : null;
-            String searchAuthor = (author != null && !author.isEmpty()) ? author : null;
-            String searchCategory = (category != null && !category.isEmpty()) ? category : null;
-            books = bookRepository.searchBooks(searchTitle, searchAuthor,searchCategory);
-        } else {
-            books = bookRepository.findByDeleted(0);
-        }
+        books = bookService.getSearchBooks(title, author, category);
 
         model.addAttribute("books", books);
         model.addAttribute("searchTitle", title);
@@ -58,15 +44,14 @@ public class BookController {
     //Register process
     @PostMapping("/add")
     public String add(Book book) {
-        book.setDeleted(0);
-        bookRepository.save(book);
+        bookService.add(book);
         return "redirect:/";
     }
 
     //Show edit form
     @GetMapping("/edit")
     public String editForm(@RequestParam Integer id, Model model) {
-        Optional<Book> book = bookRepository.findById(id);
+        Optional<Book> book = bookService.getBooks(id);
         if (book.isPresent()) {
             model.addAttribute("book",book.get());
             return "edit";
@@ -77,45 +62,28 @@ public class BookController {
     //Update
     @PostMapping("/edit")
     public String edit(Book book) {
-        book.setDeleted(0);
-        bookRepository.save(book);
+        bookService.edit(book);
         return "redirect:/";
     }
 
     //Logical delete
     @PostMapping("/delete")
     public String deleted(@RequestParam Integer id) {
-        Optional<Book> book = bookRepository.findById(id);
-        if (book.isPresent()) {
-            Book b = book.get();
-            b.setDeleted(1);
-            bookRepository.save(b);
-        }
+        bookService.deleted(id);
         return "redirect:/";
     }
 
     //Increase stock
     @PostMapping("/stock/increase")
     public String increaseStock(@RequestParam Integer id, @RequestParam Integer amount) {
-        Optional<Book> book = bookRepository.findById(id);
-        if (book.isPresent()) {
-            Book b = book.get();
-            b.setStock(b.getStock() + amount);
-            bookRepository.save(b);
-        }
+        bookService.increaseStock(id,amount);
         return "redirect:/";
     }
 
     //Decrease stock
     @PostMapping("/stock/decrease")
     public String decreaseStock(@RequestParam Integer id, @RequestParam Integer amount) {
-        Optional<Book> book = bookRepository.findById(id);
-        if(book.isPresent()) {
-            Book b = book.get();
-            int newStock = b.getStock() - amount;
-            b.setStock(Math.max(0, newStock));  //To not under 0.
-            bookRepository.save(b);
-        }
+        bookService.decreaseStock(id,amount);
         return "redirect:/";
     }
 
@@ -123,32 +91,19 @@ public class BookController {
     @PostMapping("/sell")
     public String sell(@RequestParam Integer id, @RequestParam Integer quantity,
                        RedirectAttributes redirectAttributes) {
-        Optional<Book> bookOpt = bookRepository.findById(id);
-        if (bookOpt.isPresent()) {
-            Book book = bookOpt.get();
-
-            //Confirm stock
-            if (book.getStock() < quantity) {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "Out of stock. current stock: " + book.getStock());
-                return "redirect:/";
-            }
-
-            book.setStock(book.getStock() - quantity);
-            bookRepository.save(book);
-
-            Sales sales = new Sales(book.getId(), book.getTitle(), quantity, book.getPrice());
-            salesRepository.save(sales);
-        }
-        return "redirect:/";
+         try {
+             bookService.sell(id, quantity);
+         } catch(RuntimeException e) {
+             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+         }
+         return "redirect:/";
     }
 
     //Show Sales record
     @GetMapping("/sales")
     public String salesHistory(Model model) {
-        List<Sales> salesList = salesRepository.findAllByOrderBySaleDateDesc();
-        Integer todayTotal = salesRepository.getTodayTotalSales();
-
+        List<Sales> salesList = bookService.getsalesList();
+        Integer todayTotal = bookService.getTodayTotalSales();
         model.addAttribute("salesList", salesList);
         model.addAttribute("todayTotal", todayTotal);
         return "sales";
@@ -159,32 +114,15 @@ public class BookController {
     public String purchase(@RequestParam Integer id,
                            @RequestParam Integer quantity,
                            @RequestParam Integer unitPrice) {
-        Optional<Book> bookOpt = bookRepository.findById(id);
-        if (bookOpt.isPresent()) {
-            Book book = bookOpt.get();
-
-            //Increase stock
-            book.setStock(book.getStock() + quantity);
-            bookRepository.save(book);
-
-            //Record purchases
-            Purchase purchase = new Purchase(
-                book.getId(),
-                book.getTitle(),
-                quantity,
-                unitPrice
-            );
-            purchaseRepository.save(purchase);
-        }
+        bookService.purchase(id, quantity, unitPrice);
         return "redirect:/";
     }
 
     //Show Purchase history
     @GetMapping("/purchases")
     public String purchaseHistory(Model model) {
-        List<Purchase> purchaseList = purchaseRepository.findAllByOrderByPurchaseDateDesc();
-        Integer todayTotal = purchaseRepository.getTodayTotalPurchases();
-
+        List<Purchase> purchaseList = bookService.getpurchaseList();
+        Integer todayTotal = bookService.getTodayTotalPurchases();
         model.addAttribute("purchaseList", purchaseList);
         model.addAttribute("todayTotal", todayTotal);
         return "purchases";
@@ -195,23 +133,18 @@ public class BookController {
     //Show report
     @GetMapping("/report")
     public String report(Model model) {
-        //Sales by category
-        List<Object[]> categorySales = salesRepository.getCategorySales();
+        List<Object[]> categorySales = bookService.getCategorySales();
+        List<Object[]> monthlySales = bookService.getMonthlySales();
+        Integer totalSales = bookService.getTotalSales();
+        Integer totalPurchases = bookService.getTotalPurchases();
 
-        //Sales by monthly performance(back in 6 months)
-        List<Object[]> montlySales =  salesRepository.getMonthlySales();
-
-        //Calc profit
-        Integer totalSales = salesRepository.getTotalSales();
-        Integer totalPurchases = purchaseRepository.getTotalPurchases();
         Integer profit = (totalSales != null ? totalSales : 0) - (totalPurchases != null ? totalPurchases : 0);
 
         model.addAttribute("categorySales", categorySales);
-        model.addAttribute("monthlySales", montlySales);
+        model.addAttribute("monthlySales", monthlySales);
         model.addAttribute("totalSales", totalSales != null ? totalSales: 0);
         model.addAttribute("totalPurchases", totalPurchases != null ? totalPurchases: 0);
         model.addAttribute("profit", profit);
-
         return "report";
     }
 }
