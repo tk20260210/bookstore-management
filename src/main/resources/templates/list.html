@@ -172,8 +172,7 @@
                     </div>
                     <form method="post" action="/sell">
                         <div class="modal-body">
-                            <input type="number" name="quantity" class="form-control"
-                                   min="1" th:max="${book.stock > 0} ? ${book.stock} : 1" value="1" required>
+                            <input type="hidden" name="id" th:value="${book.id}">
 
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Title</label>

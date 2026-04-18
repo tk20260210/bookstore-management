@@ -1,8 +1,7 @@
 package com.example.bookstore;
 
-import org.apache.logging.log4j.util.PerformanceSensitive;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class RegisterController {
 
     @Autowired
-    private AppUserRepository appUserRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private RegisterService registerService;
 
     @GetMapping("/register")
     public String registerForm() {
@@ -35,7 +31,7 @@ public class RegisterController {
             return "register";
         }
 
-        if (appUserRepository.findByUsername(username).isPresent()) {
+        if (registerService.getAppUser(username).isPresent()) {
             model.addAttribute("error", "Already exists");
             model.addAttribute("username", username);
             return "register";
@@ -50,13 +46,7 @@ public class RegisterController {
     public String complete(@RequestParam String username,
                            @RequestParam String password,
                            Model model) {
-        AppUser user = new AppUser();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setRole("USER");
-        user.setEnabled(1);
-        appUserRepository.save(user);
-
+        registerService.register(username, password);
         model.addAttribute("username", username);
         return "redirect:/login";
     }
