@@ -1,5 +1,6 @@
 package com.example.bookstore;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.apache.logging.log4j.util.PerformanceSensitive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,15 +24,20 @@ public class BookController {
     public String list(@RequestParam(required = false) String title,
                        @RequestParam(required = false) String author,
                        @RequestParam(required = false) String category,
+                       @RequestParam(required = false) Boolean showDeleted,
                        Model model) {
+
+        Integer deleted = (showDeleted != null && showDeleted) ? 1 : 0;
+
         List<Book> books;
 
-        books = bookService.getSearchBooks(title, author, category);
+        books = bookService.getSearchBooks(title, author, category, deleted);
 
         model.addAttribute("books", books);
         model.addAttribute("searchTitle", title);
         model.addAttribute("searchAuthor", author);
         model.addAttribute("searchCategory", category);
+        model.addAttribute("deleted", showDeleted);
         return "list";
     }
 

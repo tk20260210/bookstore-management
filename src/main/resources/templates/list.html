@@ -41,6 +41,14 @@
                         <option value="others" th:selected="${searchCategory == 'others'}">others</option>
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label"></label>
+                    <div class="form-check mt-2">
+                        <input type="checkbox" name="showDeleted" value="true" class="form-check-input"
+                               th:checked="${deleted}">
+                        <label class="form-check-label">deleted</label>
+                    </div>
+                </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-search"></i> Search

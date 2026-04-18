@@ -22,14 +22,14 @@ public class BookService {
     }
 
     //if there is search conditions, execute search or else execute find by all.
-    public List<Book> getSearchBooks(String title, String author, String category) {
+    public List<Book> getSearchBooks(String title, String author, String category, Integer deleted) {
         if ((title != null && !title.isEmpty()) || (author != null && !author.isEmpty()) || (category != null && !category.isEmpty())) {
             String searchTitle = (title != null && !title.isEmpty()) ? title : null;
             String searchAuthor = (author != null && !author.isEmpty()) ? author : null;
             String searchCategory = (category != null && !category.isEmpty()) ? category : null;
-            return  bookRepository.searchBooks(searchTitle, searchAuthor, searchCategory);
+            return  bookRepository.searchBooks(searchTitle, searchAuthor, searchCategory, deleted);
         } else {
-            return bookRepository.findByDeleted(0);
+            return bookRepository.findByDeleted(deleted);
         }
     }
 
